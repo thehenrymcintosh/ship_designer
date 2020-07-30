@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Img To Grid</title>
+</head>
+<body>
+  <div class="wrapper" style="display:flex;">
+    <canvas style="background-color: gainsboro;" id="canvas"></canvas>
+    <img id="og_img_display">
+  </div>
+  <form id="upload_form">
+    Upload an image
+    <input type="file" id="file">
+    <button>Upload</button>
+  </form>
+  <div>
+    <label>
+      Y Offset
+      <input id="y_offset" type="number" value="0" step="0.2">
+    </label>
+    <label>
+      X Offset
+      <input id="x_offset" type="number" value="0" step="0.2">
+    </label>
+    <label>
+      Edge Sensitivity
+      <input id="edge_sensitivity" type="number" value="1" step="0.05">
+    </label>
+  </div>
+  <script>
+  
+    var file_upload_input = document.getElementById("file");
+    var file_upload_form = document.getElementById("upload_form");
+    var canvas = document.getElementById("canvas");
+    var og_img_display = document.getElementById("og_img_display");
+    
+    function browser_is_supported() {
+      var return_obj = {
+        reason: "",
+        is_supported: true,
+      }
+      if ( !Storage ) {
+        return_obj.reason = "LocalStorage is not available";
+        return_obj.is_supported = false;
+      } else if ( !FileReader ) {
+        return_obj.reason = "FileReader is not available";
+        return_obj.is_supported = false;
+      } else if ( !Promise ) {
+        return_obj.reason = "Promise is not available";
+        return_obj.is_supported = false;
+      }
+      return return_obj;
+    }
+
+    class Input {
+      constructor( element, oninput_callback ) {
+        this.element = element;
+        this.debounce_time = 100;
+        this.change_callbacks = [oninput_callback];
+        this.timeout = null;
+        this.element.addEventListener("input", (e)=>{
+          if ( this.timeout ) {
+            clearTimeout( this.timeout );
+            this.timeout = null;
+          };
+          this.timeout = setTimeout(()=>{
+            this.change_callbacks.forEach( cb => {
+              cb(this.val(),this,e);
+            });
+          },this.debounce_time);
+        });
+      }
+      val() {
+        return this.element.value-0;
+      }
+      id() {
+        return this.element.id;
+      }
+      on_input( callback ) {
+        this.oninput_callbacks.push( callback )
+      }
+      set_prop(prop, val) {
+        this.element.setAttribute(prop,val);
+      }
+      clear_prop(prop) {
+        this.element.clearAttribute(prop);
+      }
+      set_to(val) {
+        this.element.value = val;
+      }
+      toString() {
+        return this.val();
+      }
+    }
+
+    class ImgHandler {
+      constructor(storage_key, file_input) {
+        this.storage_key = storage_key;
+        this.file_input = file_input;
+      }
+
+      upload() {
+        var files = this.file_input.files;
+        var self = this;
+        return new Promise(( resolve, reject ) => {
+          if (FileReader && files && files.length) {
+            var fr = new FileReader();
+            fr.onload = function () {
+              var data_url = fr.result;
+              self.store( data_url );
+              resolve(data_url);
+            }
+            fr.onerror = function(err) {
+              reject( err );
+            }
+            fr.readAsDataURL(files[0]);
+          } else { 
+            reject( new Error("No files!") );
+          }
+        })
+      }
+
+      show_current() {
+        var data_url = localStorage.getItem(this.storage_key);
+        if ( og_img_display ) {
+          og_img_display.src = data_url;
+        }
+      }
+
+      fetch() {
+        if(localStorage.getItem(this.storage_key) !== null){
+          this.show_current();
+          return localStorage.getItem(this.storage_key);
+        }
+        return null;
+      }
+      store( data_url ) {
+        localStorage.setItem(this.storage_key, data_url);
+        this.show_current();
+      }
+
+      clear() {
+        localStorage.removeItem(this.storage_key);
+      }
+    }
+    var overrides = {};
+    var edgearray = [];
+    function within_distance_of_edge(x,y,distance) {
+      var i;
+      var l = edgearray.length;
+      var test_distance, test_x, test_y;
+      for ( i=0;i<l;i++) {
+        [test_x, test_y] = edgearray[i];
+        test_distance = Math.sqrt((test_x - x)**2 + (test_y - y)**2);
+        if ( test_distance <= distance ) return true;
+      }
+      return false;
+    }
+    class CanvasWrapper {
+      constructor( element ) {
+        this.element = element;
+        this.context = element.getContext("2d");
+        this.transforms = [];
+        this.options = {
+          // set props
+          max_wide: 54,
+          max_tall: 54,
+          x_offset: 0,
+          y_offset: 0,
+          edge_sensitivity:1,
+        }
+        this.blocks = {
+          // calced props
+          wide: 0,
+          tall: 0,
+          side_length: 0,
+        }
+      }
+      update_options(options) {
+        this.options = {
+          ...this.options,
+          ...options,
+        }
+      }
+      calc_blocks() {
+        if ( this.w * this.options.max_wide < this.h * this.options.max_tall ) {
+          this.blocks.wide = this.options.max_wide;
+          this.blocks.side_length = this.w / this.options.max_wide;
+          this.blocks.tall = Math.round((this.h/this.w)*this.options.max_wide);
+          // this.options.y_offset = Math.round((((this.h/this.w)*this.options.max_wide) % 1) * this.blocks.side_length);
+          // this.options.x_offset = 0;
+        } else if ( this.w * this.options.max_wide > this.h * this.options.max_tall ) {
+          this.blocks.tall = this.options.max_tall;
+          this.blocks.side_length = this.h / this.options.max_tall;
+          this.blocks.wide = Math.round((this.w/this.h)*this.options.max_tall);
+          // this.options.y_offset = 0;
+          // this.options.x_offset = Math.round((((this.w/this.h)*this.options.max_tall) % 1) * this.blocks.side_length);
+        } else {
+          this.blocks.tall = this.options.max_tall;
+          this.blocks.wide = this.options.max_wide;
+          this.blocks.side_length = this.h / this.options.max_tall;
+          // this.options.y_offset = 0;
+          // this.options.x_offset = 0;
+        }
+      }
+      draw_image_from_data_url(data_url) {
+        var self = this;
+        this.data_url = data_url;
+        return new Promise( (resolve,reject) => {
+          var img = new Image();
+          img.onload = function () {
+            self.clear_canvas();
+            self.element.width =this.width;
+            self.element.height =this.height;
+            self.context.drawImage(this, 0, 0);
+            resolve();
+          };
+          img.onerror = reject;
+          img.src = data_url;
+        })
+      }
+      clear_canvas() {
+        this.context.clearRect(0,0,this.element.width,this.element.height);
+      }
+      draw_horizontal_line(y, px) {
+        let x;
+        for ( x=0; x<this.w; x++ ) {
+          this.set_px(x,y,px);
+        }
+      }
+      draw_vertical_line(x, px) {
+        let y;
+        for ( y=0; y<this.h; y++ ) {
+          this.set_px(x,y,px);
+        }
+      }
+      fill_block(mid_x,mid_y, px) {
+        var mid = Math.round(this.blocks.side_length/2);
+        let x,y;
+        for ( y=-mid;y<=mid;y++) {
+          for ( x=-mid;x<=mid;x++) {
+            try {
+              this.set_px(x+mid_x,y+mid_y,px)
+            } catch( err ) {
+
+            }
+          }
+        }
+      }
+      draw_blocks() {
+        var line = [0,0,255,50];
+        var x, y;
+        for ( x=0; x<this.blocks.wide; x++ ) {
+          this.draw_vertical_line(Math.round(this.options.x_offset + x*this.blocks.side_length),line);
+        }
+        for ( y=0; y<this.blocks.tall; y++ ) {
+          this.draw_horizontal_line(Math.round(this.options.y_offset + y*this.blocks.side_length),line);
+        }
+        var mid = Math.round(this.blocks.side_length/2);
+        var target_x,target_y,current;
+        for ( y=0; y<this.blocks.tall; y++ ) {
+          for ( x=0; x<this.blocks.wide; x++ ) {
+            target_x = Math.round(this.options.x_offset + x*this.blocks.side_length + mid);
+            target_y = Math.round(this.options.y_offset + y*this.blocks.side_length + mid);
+            try {
+              current = this.get_px( target_x, target_y );
+              if ( current[1] > 0 ) {
+                this.fill_block( target_x, target_y,[0,0,255,255]);
+              } else if ( within_distance_of_edge(target_x,target_y,mid*this.options.edge_sensitivity) ) {
+                this.fill_block( target_x, target_y,[0,0,255,255]);
+              } else {
+                  this.set_px( target_x, target_y,[255,0,0,255]);              
+              } 
+            } catch (error) {
+              
+            }
+          }
+        }
+      }
+      draw( data_url ) {
+        return this.draw_image_from_data_url(data_url)
+          .then(()=>{
+            this.transform();
+            this.calc_blocks();
+            this.draw_blocks();
+            this.rerender_image_data();
+          })
+      }
+      refresh() {
+        return this.draw_image_from_data_url(this.data_url)
+          .then(()=>{
+            this.transform();
+            this.calc_blocks();
+            this.draw_blocks();
+            this.rerender_image_data();
+          })
+      }
+      transform() {
+        this.imageData = this.context.getImageData(0, 0, canvas.width, canvas.height);
+        var [w,h] = this.get_dimensions();
+        this.w = w;
+        this.h = h;
+        console.log( this.imageData );
+        edgearray = [];
+        this.transforms.forEach( transform_fn => {
+          this.run_transform( transform_fn );
+          this.rerender_image_data();
+        })
+      }
+      run_transform( transform_fn ) {
+        var x = 0;
+        var y = 0;
+        var pixel = [];
+        var update = null;
+        var [w,h] = this.get_dimensions();
+        var newarr = [];
+
+        for ( y=0; y<h; y++ ) {
+          for ( x=0; x<w; x++ ) {
+            pixel = this.get_px(x,y);
+            update = transform_fn( x,y,pixel, this );
+            if ( update && update.length === 4 ) {
+              newarr.push(...update);
+            } else {
+              newarr.push(...pixel);
+            }
+          }
+        }
+        var i;
+        var newarr_len = newarr.length;
+        for (i=0;i<newarr_len;i++) {
+          this.imageData.data[i] = newarr[i];
+        }
+      }
+      apply_transform( transform_fn ) {
+        this.transforms.push( transform_fn );
+      }
+      get_dimensions() {
+        if ( !this.imageData ) throw new Error("Missing image data");
+        return [this.imageData.width, this.imageData.height];
+      }
+      get_px_start_index(x,y) {
+        return (y*this.w + x)*4; 
+      }
+      get_px(x,y) {
+        if ( x < 0 || x >= this.w || y < 0 || y >= this.h ) throw new Error("Out of bounds");
+        var start = this.get_px_start_index(x,y);
+        var r = this.imageData.data[start];
+        var g = this.imageData.data[start + 1];
+        var b = this.imageData.data[start + 2];
+        var a = this.imageData.data[start + 3];
+
+        return [r,g,b,a]; // +4 for r,g,b,a;
+      } 
+      set_px(x,y,[r,g,b,a]) {
+        var start = this.get_px_start_index(x,y);
+        this.imageData.data[start] = r;
+        this.imageData.data[start + 1] = g;
+        this.imageData.data[start + 2] = b;
+        this.imageData.data[start + 3] = a;
+      }
+      rerender_image_data() {
+        this.context.putImageData(this.imageData, 0, 0);
+      }
+    }
+
+    function set_test_img_src( data_url ) {
+      document.getElementById("test").src =  data_url;
+    }
+
+
+    var browser_support = browser_is_supported();
+    var threshold = 0;
+    var b_threshold = 1.42;
+
+    function px_to_greyscale([r,g,b,a]) {
+     return (0.299 * r +  0.587 * g + 0.114 * b);
+    }
+    function px_to_alpha([r,g,b,a]) {
+      return a;
+    }
+    function sobel([a,b,c,d,e,f,g,h]) {
+      // a b c
+      // d - e 
+      // f g h
+      var g_x = a + 2*d + f - ( c + 2*e + h );
+      var g_y = a + 2*b + c - ( f + 2*g + h );
+      var magnitude = Math.sqrt( g_x**2 + g_y**2 );
+      var theta = Math.atan(g_y,g_x);
+      return [magnitude, theta];
+    }
+    function greyscale(x,y,pixel,papa) {
+      var grey = px_to_greyscale(pixel);
+      return [grey,grey,grey,pixel[3]];
+    }
+    function edge_detect(x,y,pixel,papa) {
+      // 1 2 3
+      // 4 - 5 
+      // 6 7 8
+      if ( x === 0 || x === papa.w - 1 || y === 0 || y === papa.h - 1 ) return [0,0,0,0];
+      try {
+        var surrounding_8_px = [];
+        for ( let y_offset=-1;y_offset<2;y_offset++) {
+          for ( let x_offset=-1;x_offset<2;x_offset++) {
+            if ( y_offset === 0 && x_offset === 0 ) continue;
+            surrounding_8_px.push( papa.get_px(x+x_offset,y+y_offset) );
+          }
+        }
+        var prepped = surrounding_8_px.map( px_to_alpha );
+
+        var [magnitude, theta] = sobel(prepped);
+        if ( magnitude > threshold ) {
+          // found edge
+          edgearray.push([x,y]);
+          return [255-magnitude,255-magnitude,255-magnitude,255]; // black solid edge
+        } else if ( pixel[3] > 125 ) { // if alpha is above 125 fill in green
+          return [0,255,0,100]
+        } 
+        // else fill in red
+        return [255,0,0,100];
+      } catch (error) {
+        // console.error( error );
+        return [0,0,0,0];
+      }
+    }
+
+    function test_transform(x,y,pixel,papa) {
+      return [255, pixel[1], pixel[2], pixel[3]];
+    }
+
+
+    if ( browser_support.is_supported ) {
+      var ship_img = new ImgHandler("raw_ship_image", file_upload_input );
+      var canvas_wrapper = new CanvasWrapper(canvas);
+      // canvas_wrapper.apply_transform( greyscale );
+      canvas_wrapper.apply_transform( edge_detect );
+
+      function update_canvas_options(val, input) {
+        var options = {};
+        options[input.id()] = val;
+        canvas_wrapper.update_options(options);
+        canvas_wrapper.refresh();
+      }
+      var options = {
+        y_offset: new Input(document.getElementById("y_offset"),update_canvas_options),
+        x_offset: new Input(document.getElementById("x_offset"),update_canvas_options),
+        edge_sensitivity: new Input(document.getElementById("edge_sensitivity"),update_canvas_options),
+      }
+      var data_url = ship_img.fetch();
+      if ( data_url !== null ) {
+        canvas_wrapper
+          .draw(data_url)
+      }
+        
+      file_upload_form.addEventListener("submit", (e) => {
+        ship_img
+          .upload()
+          .then( (data_url) => canvas_wrapper.draw(data_url) )
+          .catch( err => alert(err.message))
+        e.preventDefault();
+        return false;
+      })
+    } else {
+      alert( "Error: Browser unsupported because " + browser_support.reason )
+    }
+
+    
+
+
+
+
+    function upload( e ) {
+      if(localStorage.getItem("wall_blue") !== null){
+        var globalHolder = document.getElementById('globalHolder');
+        var wall = localStorage.getItem('wall_blue');
+        globalHolder.style.backgroundImage= "url("+wall+")";
+      } else {
+        // if the image is not saved as blob in local storage
+        // save it for the future by the use of canvas api and toDataUrl method
+        var img = new Image();
+        img.src = 'images/walls/wall_blue.png';
+        img.onload = function () {
+          var canvas = document.createElement("canvas");
+          canvas.width =this.width;
+          canvas.height =this.height;
+
+          var ctx = canvas.getContext("2d");
+          ctx.drawImage(this, 0, 0);
+          
+          var dataURL = canvas.toDataURL();
+        };
+
+      }
+    }
+  </script>
+</body>
+</html>
