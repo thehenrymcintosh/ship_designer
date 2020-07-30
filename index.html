@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Img To Grid</title>
+  <style>
+    label {
+      display: block;
+    }
+  </style>
 </head>
 <body>
   <div class="wrapper" style="display:flex;">
@@ -27,6 +32,14 @@
     <label>
       Edge Sensitivity
       <input id="edge_sensitivity" type="number" value="1" step="0.05">
+    </label>
+    <label>
+      Max grid width (in blocks)
+      <input id="max_wide" type="number" value="54" step="1" min="1">
+    </label>
+    <label>
+      Max grid height (in blocks)
+      <input id="max_tall" type="number" value="54" step="1" min="1">
     </label>
   </div>
   <script>
@@ -446,6 +459,8 @@
       var options = {
         y_offset: new Input(document.getElementById("y_offset"),update_canvas_options),
         x_offset: new Input(document.getElementById("x_offset"),update_canvas_options),
+        max_wide: new Input(document.getElementById("max_wide"),update_canvas_options),
+        max_tall: new Input(document.getElementById("max_tall"),update_canvas_options),
         edge_sensitivity: new Input(document.getElementById("edge_sensitivity"),update_canvas_options),
       }
       var data_url = ship_img.fetch();
