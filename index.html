@@ -6,7 +6,11 @@
   <title>Img To Grid</title>
   <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://unpkg.com/hashmodals@1.0.1/lib/index.css">
+  <link rel="stylesheet" href="https://unpkg.com/hashmodals@1.0.1/lib/theme.css">
+
   <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+  <script src="https://unpkg.com/hashmodals@1.0.1/lib/index.js"></script>
   <style>
     label {
       display: block;
@@ -14,7 +18,35 @@
     * {
         box-sizing: content-box;
     }
+    .visually-hidden {
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      height: 1px;
+      overflow: hidden;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+    .modal-title {
+      margin-top: 0;
+    }
+    .help-link {
+      border-radius: 50%;
+      height: 18px;
+      width: 18px;
+      box-sizing: border-box;
+      padding-top: 0px;
+      border: 1px solid grey;
+      color: grey;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 400;
+    }
     .sidebar {
+      position: relative;
       width: 300px;
       height: 100vh;
       overflow: auto;
@@ -50,7 +82,7 @@
     }
     #og_img_display{
       object-fit: contain;
-      width: 50%; 
+      width: 100%; 
       max-width: 150px;
       max-height: 150px;
       margin-bottom: 10px;
@@ -102,8 +134,9 @@
     <canvas width="1" height="1" style="background-color: gainsboro;" id="canvas"></canvas>
     <div class="sidebar">
       <div class="image_wrapper">
+        <a class="help-link" href="#help"><span class="visually-hidden">Open help</span>?</a>
         <img id="og_img_display" class="checkered">
-    
+        
         <form id="upload_form">
           <p>Upload an image where background is transparent and the ship is not.</p>
           <input class="file_selector" type="file" id="file" accept=".gif,.png,.bmp,.tiff">
@@ -729,6 +762,23 @@
       canvas_wrapper.refresh(true);
     })
 
+    modals.addModal("help",`
+      <h3 class="modal-title">How to use the Ship Designer</h3>
+      <ol>
+        <li>Click choose file to select your PNG, then click upload</li>
+        <li>Scale the grid width and height to match your in-game grid</li>
+        <li>Scale, position, and rotate the image to fill the grid as you want</li>
+        <li>Adjust the grid X and Y offset and edge sensitivity to achieve symmetry.</li>
+      </ol>
+      <h3>How to prepare your ship image</h3>
+      <p>If you can't find an image where the background is transparent and your ship is not, you can transform an image with the following steps.</p>
+      <ol>
+        <li>Find a top-down view of the ship of your choice</li>
+        <li>Open the image in editing software, like Preview</li>
+        <li>Use the magic wand tool to select and delete the background</li>
+        <li>Save the image as a PNG</li>
+      </ol>
+    `)
     
   </script>
 
