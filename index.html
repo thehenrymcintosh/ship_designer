@@ -433,9 +433,9 @@
 
       draw_image_from_data_url(data_url, is_new_img=false) {
         var self = this;
-        let sidelen = window.innerHeight; // works because of flexbox
+        let freeheight = window.innerHeight; // works because of flexbox
         let freewidth = window.innerWidth - 300; 
-        sidelen = Math.min( sidelen, freewidth);
+        let sidelen = Math.min( freeheight, freewidth);
         self.element.width = sidelen;
         self.element.height = sidelen;
         let left = sidelen/2;
