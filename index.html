@@ -172,22 +172,22 @@
         </label>
     
         <label class="mdc-text-field mdc-text-field--outlined">
-          <input id="max_wide" type="number" value="54" step="1" min="1" class="mdc-text-field__input" aria-labelledby="max_wide_label">
+          <input id="blocks_wide" type="number" value="54" step="1" min="1" class="mdc-text-field__input" aria-labelledby="blocks_wide_label">
           <span class="mdc-notched-outline">
             <span class="mdc-notched-outline__leading"></span>
             <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label" id="max_wide_label">Max grid width (in blocks)</span>
+              <span class="mdc-floating-label" id="blocks_wide_label">Grid width (in blocks)</span>
             </span>
             <span class="mdc-notched-outline__trailing"></span>
           </span>
         </label>
     
         <label class="mdc-text-field mdc-text-field--outlined">
-          <input id="max_tall" type="number" value="54" step="1" min="1" class="mdc-text-field__input" aria-labelledby="max_tall_label">
+          <input id="blocks_tall" type="number" value="54" step="1" min="1" class="mdc-text-field__input" aria-labelledby="blocks_tall_label">
           <span class="mdc-notched-outline">
             <span class="mdc-notched-outline__leading"></span>
             <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label" id="max_tall_label">Max grid height (in blocks)</span>
+              <span class="mdc-floating-label" id="blocks_tall_label">Grid height (in blocks)</span>
             </span>
             <span class="mdc-notched-outline__trailing"></span>
           </span>
@@ -295,8 +295,8 @@
     var options = {
         y_offset: new Input(document.getElementById("y_offset")),
         x_offset: new Input(document.getElementById("x_offset")),
-        max_wide: new Input(document.getElementById("max_wide")),
-        max_tall: new Input(document.getElementById("max_tall")),
+        blocks_wide: new Input(document.getElementById("blocks_wide")),
+        blocks_tall: new Input(document.getElementById("blocks_tall")),
         edge_sensitivity: new Input(document.getElementById("edge_sensitivity")),
         image_scale_factor: new Input(document.getElementById("image_scale_factor")),
         image_rotation_angle: new Input(document.getElementById("image_rotation_angle")),
@@ -374,8 +374,8 @@
         this.transforms = [];
         this.options = {
           // set props
-          max_wide: 54,
-          max_tall: 54,
+          blocks_wide: 54,
+          blocks_tall: 54,
           x_offset: 0,
           y_offset: 0,
           edge_sensitivity:1,
@@ -411,19 +411,8 @@
         }
       }
       calc_blocks() {
-        if ( this.w * this.options.max_wide < this.h * this.options.max_tall ) {
-          this.blocks.wide = this.options.max_wide;
-          this.blocks.side_length = this.w / this.options.max_wide;
-          this.blocks.tall = Math.round((this.h/this.w)*this.options.max_wide);
-        } else if ( this.w * this.options.max_wide > this.h * this.options.max_tall ) {
-          this.blocks.tall = this.options.max_tall;
-          this.blocks.side_length = this.h / this.options.max_tall;
-          this.blocks.wide = Math.round((this.w/this.h)*this.options.max_tall);
-        } else {
-          this.blocks.tall = this.options.max_tall;
-          this.blocks.wide = this.options.max_wide;
-          this.blocks.side_length = this.h / this.options.max_tall;
-        }
+        this.blocks.wide = this.options.blocks_wide;
+        this.blocks.tall = this.options.blocks_tall;
       }
       drawCenteredImage(image, x, y, scale, rotation){
         this.context.setTransform(scale, 0, 0, scale, x, y); // sets scale and origin
@@ -433,13 +422,17 @@
 
       draw_image_from_data_url(data_url, is_new_img=false) {
         var self = this;
-        let freeheight = window.innerHeight; // works because of flexbox
+        let freeheight = window.innerHeight;
         let freewidth = window.innerWidth - 300; 
-        let sidelen = Math.min( freeheight, freewidth);
-        self.element.width = sidelen;
-        self.element.height = sidelen;
-        let left = sidelen/2;
-        let top = sidelen/2;  
+        let block_px_width = freewidth / this.options.blocks_wide;
+        let block_px_height = freeheight / this.options.blocks_tall;
+        this.blocks.side_length = Math.min( block_px_width, block_px_height );
+        let w = this.blocks.side_length * this.options.blocks_wide;
+        let h = this.blocks.side_length * this.options.blocks_tall;
+        self.element.width = w;
+        self.element.height = h;
+        let left = w/2;
+        let top = h/2;  
         if ( this.data_url === data_url && !is_new_img && this.img ) {
           return new Promise((resolve, reject) => {
             self.clear_canvas();
@@ -456,8 +449,8 @@
             // self.element.width = this.width;
             // self.element.height = this.height;
             if ( is_new_img ) {
-              let rel_x = sidelen / this.width; 
-              let rel_y = sidelen / this.height;
+              let rel_x = w / this.width; 
+              let rel_y = h / this.height;
               let min = Math.min(rel_x,rel_y);
               self.options.image_scale_factor = min;
               options.image_scale_factor.set_to(min);
@@ -520,7 +513,7 @@
               } else if ( within_distance_of_edge(target_x,target_y,mid*this.options.edge_sensitivity) ) {
                 this.fill_block( target_x, target_y,[0,0,255,255]);
               } else {
-                this.set_px( target_x, target_y,[255,0,0,255]);              
+                // this.set_px( target_x, target_y,[255,0,0,255]);              
               } 
             } catch (error) {
               
