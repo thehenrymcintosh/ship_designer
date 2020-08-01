@@ -77,6 +77,11 @@
       margin-bottom: 25px;
       font-size: 12px;
     }
+    .example_button {
+      margin-top: 5px;
+      margin-bottom: 5px;
+      font-size: 12px;
+    }
     .file_selector {
       margin-bottom: 5px;
     }
@@ -93,7 +98,7 @@
 </head>
 <body>
   <div class="wrapper checkered">
-    <canvas style="background-color: gainsboro;" id="canvas"></canvas>
+    <canvas width="1" height="1" style="background-color: gainsboro;" id="canvas"></canvas>
     <div class="sidebar">
       <div class="image_wrapper">
         <img id="og_img_display" class="checkered">
@@ -104,6 +109,10 @@
           <button class="mdc-button mdc-button--raised">
             <span class="mdc-button__label">Use new image</span>
           </button>
+          <button id="show_example" class="mdc-button example_button">
+            <div class="mdc-button__ripple"></div>
+            <span class="mdc-button__label">View example</span>
+        </button>
         </form>
       </div>
       <div class="update_form">
@@ -705,14 +714,17 @@
     }
 
     function get_millennium_falcon_options() {
-        fetch('./mil_falc.txt')
-          .then(x => {
-            canvas_wrapper.draw(x.text())
+        fetch("./mil_falc.txt")
+          .then(x=>x.text())
+          .then(data_url => {
+            og_img_display.src = data_url;
+            canvas_wrapper.draw(data_url);
           })
           .catch( (err) => {
             console.log( err );
           } )
     }
+    document.getElementById("show_example").addEventListener("click",get_millennium_falcon_options);
     document.querySelectorAll(".mdc-text-field").forEach( el => {
       mdc.textField.MDCTextField.attachTo(el)
     })
