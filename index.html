@@ -4,51 +4,220 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Img To Grid</title>
+  <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
   <style>
     label {
       display: block;
     }
+    * {
+        box-sizing: content-box;
+    }
+    .sidebar {
+      width: 300px;
+      height: 100vh;
+      overflow: auto;
+      background: white;
+      box-shadow: 0 0 2px rgba(0,0,0,0.4), 0 0 6px rgba(0,0,0,0.3);
+      padding: 10px 15px;
+      box-sizing: border-box;
+      /* flex: 1; */
+    }
+    body, html {
+      margin: 0;
+      webkit-font-smoothing: antialiased;
+      font-family: Roboto, sans-serif;
+      font-family: var(--mdc-typography-subtitle1-font-family, var(--mdc-typography-font-family, Roboto, sans-serif));
+      font-size: 1rem;
+      font-size: var(--mdc-typography-subtitle1-font-size, 1rem);
+      font-weight: 400;
+      font-weight: var(--mdc-typography-subtitle1-font-weight, 400);
+      letter-spacing: 0.009375em;
+      letter-spacing: var(--mdc-typography-subtitle1-letter-spacing, 0.009375em);
+      line-height: 1.15rem;
+    }
+    .mdc-text-field {
+      margin: 5px 0;
+    }
+    .wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    canvas {
+      /* margin: auto; */
+    }
+    #og_img_display{
+      width: 50%; 
+      max-width: 150px;
+      max-height: 150px;
+      margin-bottom: 10px;
+    }
+    .image_wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .update_form {
+      display: flex;
+      flex-wrap: wrap;
+      margin-left: -5px;
+      margin-right: -5px;
+    }
+    .update_form label {
+      margin: 5px;
+      flex-shrink: 1;
+      flex-grow: 1;
+      flex-basis: 175px;
+    }
+    .scale_factor_button {
+      margin-top: 5px;
+      margin-bottom: 25px;
+      font-size: 12px;
+    }
+    .file_selector {
+      margin-bottom: 5px;
+    }
+    .checkered {
+      background-image:
+        linear-gradient(45deg, #ccc 25%, transparent 25%), 
+        linear-gradient(135deg, #ccc 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ccc 75%),
+        linear-gradient(135deg, transparent 75%, #ccc 75%);
+      background-size:20px 20px; /* Must be a square */
+      background-position:0 0, 10px 0, 10px -10px, 0px 10px; /* Must be half of one side of the square */
+    }
   </style>
 </head>
 <body>
-  <div class="wrapper" style="display:flex;">
+  <div class="wrapper checkered">
     <canvas style="background-color: gainsboro;" id="canvas"></canvas>
-    <img id="og_img_display">
-  </div>
-  <form id="upload_form">
-    Upload an image
-    <input type="file" id="file">
-    <button>Upload</button>
-  </form>
-  <div>
-    <label>
-      Y Offset
-      <input id="y_offset" type="number" value="0" step="0.2">
-    </label>
-    <label>
-      X Offset
-      <input id="x_offset" type="number" value="0" step="0.2">
-    </label>
-    <label>
-      Edge Sensitivity
-      <input id="edge_sensitivity" type="number" value="1" step="0.05">
-    </label>
-    <label>
-      Max grid width (in blocks)
-      <input id="max_wide" type="number" value="54" step="1" min="1">
-    </label>
-    <label>
-      Max grid height (in blocks)
-      <input id="max_tall" type="number" value="54" step="1" min="1">
-    </label>
+    <div class="sidebar">
+      <div class="image_wrapper">
+        <img id="og_img_display" class="checkered">
+    
+        <form id="upload_form">
+          <p>Upload an image where background is transparent and the ship is not.</p>
+          <input class="file_selector" type="file" id="file" accept=".gif,.png,.bmp,.tiff">
+          <button class="mdc-button mdc-button--raised">
+            <span class="mdc-button__label">Use new image</span>
+          </button>
+        </form>
+      </div>
+      <div class="update_form">
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="y_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="y_offset_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="y_offset_label">Grid Y Offset</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="x_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="x_offset_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="x_offset_label">Grid X Offset</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="image_y_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="image_y_offset_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="image_y_offset_label">Image Y Offset</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="image_x_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="image_x_offset_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="image_x_offset_label">Image X Offset</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="edge_sensitivity" type="number" value="1" step="0.05" class="mdc-text-field__input" aria-labelledby="edge_sensitivity_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="edge_sensitivity_label">Edge Sensitivity</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="max_wide" type="number" value="54" step="1" min="1" class="mdc-text-field__input" aria-labelledby="max_wide_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="max_wide_label">Max grid width (in blocks)</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="max_tall" type="number" value="54" step="1" min="1" class="mdc-text-field__input" aria-labelledby="max_tall_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="max_tall_label">Max grid height (in blocks)</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="image_scale_factor" type="number" value="1" step="0.01" class="mdc-text-field__input" aria-labelledby="image_scale_factor_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="image_scale_factor_label">Image scale factor </span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+        <button id="reset_scale_factor" class="mdc-button scale_factor_button">
+          <div class="mdc-button__ripple"></div>
+          <span class="mdc-button__label">Reset Scale Factor</span>
+      </button>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="image_rotation_angle" type="number" value="0" step="0.5" class="mdc-text-field__input" aria-labelledby="image_rotation_angle_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="image_rotation_angle_label">Image rotation (degrees)</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+      </div>
+    </div>
   </div>
   <script>
-  
     var file_upload_input = document.getElementById("file");
     var file_upload_form = document.getElementById("upload_form");
     var canvas = document.getElementById("canvas");
     var og_img_display = document.getElementById("og_img_display");
-    
+
     function browser_is_supported() {
       var return_obj = {
         reason: "",
@@ -70,8 +239,11 @@
     class Input {
       constructor( element, oninput_callback ) {
         this.element = element;
-        this.debounce_time = 100;
-        this.change_callbacks = [oninput_callback];
+        this.debounce_time = 150;
+        this.change_callbacks = [];
+        if ( oninput_callback ) {
+          this.change_callbacks.push(oninput_callback);
+        }
         this.timeout = null;
         this.element.addEventListener("input", (e)=>{
           if ( this.timeout ) {
@@ -79,10 +251,13 @@
             this.timeout = null;
           };
           this.timeout = setTimeout(()=>{
-            this.change_callbacks.forEach( cb => {
-              cb(this.val(),this,e);
-            });
+            this.run_callbacks(e);
           },this.debounce_time);
+        });
+      }
+      run_callbacks(e) {
+        this.change_callbacks.forEach( cb => {
+          cb(this.val(),this,e);
         });
       }
       val() {
@@ -92,7 +267,7 @@
         return this.element.id;
       }
       on_input( callback ) {
-        this.oninput_callbacks.push( callback )
+        this.change_callbacks.push( callback )
       }
       set_prop(prop, val) {
         this.element.setAttribute(prop,val);
@@ -107,6 +282,18 @@
         return this.val();
       }
     }
+        
+    var options = {
+        y_offset: new Input(document.getElementById("y_offset")),
+        x_offset: new Input(document.getElementById("x_offset")),
+        max_wide: new Input(document.getElementById("max_wide")),
+        max_tall: new Input(document.getElementById("max_tall")),
+        edge_sensitivity: new Input(document.getElementById("edge_sensitivity")),
+        image_scale_factor: new Input(document.getElementById("image_scale_factor")),
+        image_rotation_angle: new Input(document.getElementById("image_rotation_angle")),
+        image_x_offset: new Input(document.getElementById("image_x_offset")),
+        image_y_offset: new Input(document.getElementById("image_y_offset")),
+      }
 
     class ImgHandler {
       constructor(storage_key, file_input) {
@@ -183,6 +370,10 @@
           x_offset: 0,
           y_offset: 0,
           edge_sensitivity:1,
+          image_scale_factor: 1,
+          image_rotation_angle: 0,
+          image_x_offset: 0,
+          image_y_offset: 0,
         }
         this.blocks = {
           // calced props
@@ -190,6 +381,19 @@
           tall: 0,
           side_length: 0,
         }
+        let debounce_time = 200;
+        let timeout = null;
+        window.addEventListener("resize", (e) => {
+          if ( timeout ) {
+            clearTimeout( timeout );
+            timeout = null;
+          };
+          timeout = setTimeout(()=>{
+            if ( this.data_url ) {
+            this.refresh();
+          }
+          },debounce_time);
+        })
       }
       update_options(options) {
         this.options = {
@@ -202,32 +406,55 @@
           this.blocks.wide = this.options.max_wide;
           this.blocks.side_length = this.w / this.options.max_wide;
           this.blocks.tall = Math.round((this.h/this.w)*this.options.max_wide);
-          // this.options.y_offset = Math.round((((this.h/this.w)*this.options.max_wide) % 1) * this.blocks.side_length);
-          // this.options.x_offset = 0;
         } else if ( this.w * this.options.max_wide > this.h * this.options.max_tall ) {
           this.blocks.tall = this.options.max_tall;
           this.blocks.side_length = this.h / this.options.max_tall;
           this.blocks.wide = Math.round((this.w/this.h)*this.options.max_tall);
-          // this.options.y_offset = 0;
-          // this.options.x_offset = Math.round((((this.w/this.h)*this.options.max_tall) % 1) * this.blocks.side_length);
         } else {
           this.blocks.tall = this.options.max_tall;
           this.blocks.wide = this.options.max_wide;
           this.blocks.side_length = this.h / this.options.max_tall;
-          // this.options.y_offset = 0;
-          // this.options.x_offset = 0;
         }
       }
-      draw_image_from_data_url(data_url) {
+      drawCenteredImage(image, x, y, scale, rotation){
+        this.context.setTransform(scale, 0, 0, scale, x, y); // sets scale and origin
+        this.context.rotate(rotation*Math.PI/180);
+        this.context.drawImage(image, -image.width/2, -image.height/2);
+      } 
+
+      draw_image_from_data_url(data_url, is_new_img=false) {
         var self = this;
+        let sidelen = window.innerHeight; // works because of flexbox
+        let freewidth = window.innerWidth - 300; 
+        sidelen = Math.min( sidelen, freewidth);
+        self.element.width = sidelen;
+        self.element.height = sidelen;
+        let left = sidelen/2;
+        let top = sidelen/2;  
+        if ( this.data_url === data_url && !is_new_img && this.img ) {
+          return new Promise((resolve, reject) => {
+            self.clear_canvas();
+            self.drawCenteredImage( self.img, left + self.options.image_x_offset, top + self.options.image_y_offset, self.options.image_scale_factor, self.options.image_rotation_angle );
+            resolve();
+          })
+        } 
         this.data_url = data_url;
+
         return new Promise( (resolve,reject) => {
           var img = new Image();
           img.onload = function () {
+            self.img = this;
+            // self.element.width = this.width;
+            // self.element.height = this.height;
+            if ( is_new_img ) {
+              let rel_x = sidelen / this.width; 
+              let rel_y = sidelen / this.height;
+              let min = Math.min(rel_x,rel_y);
+              self.options.image_scale_factor = min;
+              options.image_scale_factor.set_to(min);
+            }
             self.clear_canvas();
-            self.element.width =this.width;
-            self.element.height =this.height;
-            self.context.drawImage(this, 0, 0);
+            self.drawCenteredImage( this, left + self.options.image_x_offset, top + self.options.image_y_offset, self.options.image_scale_factor, self.options.image_rotation_angle )
             resolve();
           };
           img.onerror = reject;
@@ -284,7 +511,7 @@
               } else if ( within_distance_of_edge(target_x,target_y,mid*this.options.edge_sensitivity) ) {
                 this.fill_block( target_x, target_y,[0,0,255,255]);
               } else {
-                  this.set_px( target_x, target_y,[255,0,0,255]);              
+                this.set_px( target_x, target_y,[255,0,0,255]);              
               } 
             } catch (error) {
               
@@ -293,7 +520,7 @@
         }
       }
       draw( data_url ) {
-        return this.draw_image_from_data_url(data_url)
+        return this.draw_image_from_data_url(data_url, true)
           .then(()=>{
             this.transform();
             this.calc_blocks();
@@ -301,8 +528,9 @@
             this.rerender_image_data();
           })
       }
-      refresh() {
-        return this.draw_image_from_data_url(this.data_url)
+      refresh(reset_size=false) {
+        if ( !this.data_url ) return Promise.reject(new Error("No image to refresh"));
+        return this.draw_image_from_data_url(this.data_url, reset_size)
           .then(()=>{
             this.transform();
             this.calc_blocks();
@@ -315,7 +543,6 @@
         var [w,h] = this.get_dimensions();
         this.w = w;
         this.h = h;
-        console.log( this.imageData );
         edgearray = [];
         this.transforms.forEach( transform_fn => {
           this.run_transform( transform_fn );
@@ -456,13 +683,9 @@
         canvas_wrapper.update_options(options);
         canvas_wrapper.refresh();
       }
-      var options = {
-        y_offset: new Input(document.getElementById("y_offset"),update_canvas_options),
-        x_offset: new Input(document.getElementById("x_offset"),update_canvas_options),
-        max_wide: new Input(document.getElementById("max_wide"),update_canvas_options),
-        max_tall: new Input(document.getElementById("max_tall"),update_canvas_options),
-        edge_sensitivity: new Input(document.getElementById("edge_sensitivity"),update_canvas_options),
-      }
+      Object.keys( options ).forEach( key => {
+        let option = options[key].on_input(update_canvas_options);
+      })
       var data_url = ship_img.fetch();
       if ( data_url !== null ) {
         canvas_wrapper
@@ -481,34 +704,27 @@
       alert( "Error: Browser unsupported because " + browser_support.reason )
     }
 
-    
-
-
-
-
-    function upload( e ) {
-      if(localStorage.getItem("wall_blue") !== null){
-        var globalHolder = document.getElementById('globalHolder');
-        var wall = localStorage.getItem('wall_blue');
-        globalHolder.style.backgroundImage= "url("+wall+")";
-      } else {
-        // if the image is not saved as blob in local storage
-        // save it for the future by the use of canvas api and toDataUrl method
-        var img = new Image();
-        img.src = 'images/walls/wall_blue.png';
-        img.onload = function () {
-          var canvas = document.createElement("canvas");
-          canvas.width =this.width;
-          canvas.height =this.height;
-
-          var ctx = canvas.getContext("2d");
-          ctx.drawImage(this, 0, 0);
-          
-          var dataURL = canvas.toDataURL();
-        };
-
-      }
+    function get_millennium_falcon_options() {
+        fetch('./mil_falc.txt')
+          .then(x => {
+            canvas_wrapper.draw(x.text())
+          })
+          .catch( (err) => {
+            console.log( err );
+          } )
     }
+    document.querySelectorAll(".mdc-text-field").forEach( el => {
+      mdc.textField.MDCTextField.attachTo(el)
+    })
+    document.querySelectorAll(".mdc-button").forEach( el => {
+      mdc.ripple.MDCRipple.attachTo(el)
+    })
+    document.getElementById("reset_scale_factor").addEventListener("click",(e)=>{
+      canvas_wrapper.refresh(true);
+    })
+
+    
   </script>
+
 </body>
 </html>
