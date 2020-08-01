@@ -150,61 +150,8 @@
         </form>
       </div>
       <div class="update_form">
-        <label class="mdc-text-field mdc-text-field--outlined">
-          <input id="y_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="y_offset_label">
-          <span class="mdc-notched-outline">
-            <span class="mdc-notched-outline__leading"></span>
-            <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label" id="y_offset_label">Grid Y Offset</span>
-            </span>
-            <span class="mdc-notched-outline__trailing"></span>
-          </span>
-        </label>
-    
-        <label class="mdc-text-field mdc-text-field--outlined">
-          <input id="x_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="x_offset_label">
-          <span class="mdc-notched-outline">
-            <span class="mdc-notched-outline__leading"></span>
-            <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label" id="x_offset_label">Grid X Offset</span>
-            </span>
-            <span class="mdc-notched-outline__trailing"></span>
-          </span>
-        </label>
-    
-        <label class="mdc-text-field mdc-text-field--outlined">
-          <input id="image_y_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="image_y_offset_label">
-          <span class="mdc-notched-outline">
-            <span class="mdc-notched-outline__leading"></span>
-            <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label" id="image_y_offset_label">Image Y Offset</span>
-            </span>
-            <span class="mdc-notched-outline__trailing"></span>
-          </span>
-        </label>
-    
-        <label class="mdc-text-field mdc-text-field--outlined">
-          <input id="image_x_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="image_x_offset_label">
-          <span class="mdc-notched-outline">
-            <span class="mdc-notched-outline__leading"></span>
-            <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label" id="image_x_offset_label">Image X Offset</span>
-            </span>
-            <span class="mdc-notched-outline__trailing"></span>
-          </span>
-        </label>
-    
-        <label class="mdc-text-field mdc-text-field--outlined">
-          <input id="edge_sensitivity" type="number" value="1" step="0.05" class="mdc-text-field__input" aria-labelledby="edge_sensitivity_label">
-          <span class="mdc-notched-outline">
-            <span class="mdc-notched-outline__leading"></span>
-            <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label" id="edge_sensitivity_label">Edge Sensitivity</span>
-            </span>
-            <span class="mdc-notched-outline__trailing"></span>
-          </span>
-        </label>
-    
+
+
         <label class="mdc-text-field mdc-text-field--outlined">
           <input id="blocks_wide" type="number" value="54" step="1" min="1" class="mdc-text-field__input" aria-labelledby="blocks_wide_label">
           <span class="mdc-notched-outline">
@@ -232,7 +179,7 @@
           <span class="mdc-notched-outline">
             <span class="mdc-notched-outline__leading"></span>
             <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label" id="image_scale_factor_label">Image scale factor </span>
+              <span class="mdc-floating-label" id="image_scale_factor_label">Scale ship image </span>
             </span>
             <span class="mdc-notched-outline__trailing"></span>
           </span>
@@ -247,11 +194,69 @@
           <span class="mdc-notched-outline">
             <span class="mdc-notched-outline__leading"></span>
             <span class="mdc-notched-outline__notch">
-              <span class="mdc-floating-label" id="image_rotation_angle_label">Image rotation (degrees)</span>
+              <span class="mdc-floating-label" id="image_rotation_angle_label">Ship rotation (degrees)</span>
             </span>
             <span class="mdc-notched-outline__trailing"></span>
           </span>
         </label>
+
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="image_y_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="image_y_offset_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="image_y_offset_label">Move ship downwards (px)</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="image_x_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="image_x_offset_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="image_x_offset_label">Move ship right (px)</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+
+
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="edge_sensitivity" type="number" value="1" step="0.05" class="mdc-text-field__input" aria-labelledby="edge_sensitivity_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="edge_sensitivity_label">Edge smoothing</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="y_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="y_offset_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="y_offset_label">Move grid downwards (px)</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+    
+        <label class="mdc-text-field mdc-text-field--outlined">
+          <input id="x_offset" type="number" value="0" step="0.2" class="mdc-text-field__input" aria-labelledby="x_offset_label">
+          <span class="mdc-notched-outline">
+            <span class="mdc-notched-outline__leading"></span>
+            <span class="mdc-notched-outline__notch">
+              <span class="mdc-floating-label" id="x_offset_label">Move grid right (px)</span>
+            </span>
+            <span class="mdc-notched-outline__trailing"></span>
+          </span>
+        </label>
+
       </div>
     </div>
   </div>
